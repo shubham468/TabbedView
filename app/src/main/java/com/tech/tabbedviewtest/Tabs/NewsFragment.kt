@@ -8,12 +8,16 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
-import com.tech.tabbedviewtest.*
-import retrofit2.Call
-import retrofit2.Response
+import com.tech.tabbedviewtest.MyCutomAdapter
+import com.tech.tabbedviewtest.NewsDetails
+import com.tech.tabbedviewtest.R
+import com.tech.tabbedviewtest.Repo
+import com.tech.umr.Network.ApiEndpoint
+import com.tech.umr.Network.RetroInstance
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -37,8 +41,19 @@ class NewsFragment : Fragment() {
     private lateinit var arrayList: ArrayList<NewsDetails>
 
     private val retroInstance by lazy {
-        APiEndpoint.create()
+        RetroInstance().create(ApiEndpoint::class.java)
     }
+    private val repository by lazy {
+        Repo(retroInstance)
+    }
+
+    private val viewModel by lazy {
+        ViewModelProvider(
+            this,
+            NewsViewModelFactory(repository)
+        )[NewsViewModel::class.java]
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,28 +81,25 @@ class NewsFragment : Fragment() {
 
         val progress: ProgressBar = view.findViewById(R.id.progress_circular)
         progress.visibility = View.VISIBLE
-        retroInstance.getNewsList("1168145cd01f267063f46bc13531f961")
-            .enqueue(object : retrofit2.Callback<NewsModelReponse> {
-                override fun onResponse(
-                    call: Call<NewsModelReponse>,
-                    response: Response<NewsModelReponse>
-                ) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(activity, "Succes !", Toast.LENGTH_LONG).show()
-                        arrayList = response.body()?.data as ArrayList<NewsDetails>
-                        Log.e("success", Gson().toJson(arrayList))
-                        cutomAdapter.setModel(arrayList)
-                    }
-                    progress.visibility = View.GONE
+        viewModel.getNewsData("1168145cd01f267063f46bc13531f961")
 
-                }
 
-                override fun onFailure(call: Call<NewsModelReponse>, t: Throwable) {
-                    progress.visibility = View.GONE
-                    Toast.makeText(activity, "Failed !", Toast.LENGTH_LONG).show()
-                }
+        viewModel.newsData.observe(viewLifecycleOwner) {
+            Toast.makeText(activity, "Succes !", Toast.LENGTH_LONG).show()
+            arrayList = it.data as ArrayList<NewsDetails>
+            Log.e("success", Gson().toJson(arrayList))
+            cutomAdapter.setModel(arrayList)
+        }
+        viewModel.loading.observe(viewLifecycleOwner) {
+            if (it) {
+                progress.visibility = View.VISIBLE
 
-            })
+            } else {
+                progress.visibility = View.GONE
+
+            }
+
+        }
 
 
         return view

@@ -7,4 +7,13 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="transblack">#9A040404</color>
+    <color name="colorPrimary">#03DE70</color>
+
+
+
+    <color name="lightblack">#4c4c4c</color>
+    <color name="red">#F63737</color>
+    <color name="text_color_hint">@color/white</color>
+    <color name="box_stroke_color">@color/lightblack</color>
 </resources>
